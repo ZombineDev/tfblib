@@ -6,44 +6,44 @@
 #include <tfblib/tfb_colors.h>
 
 
-bool font_iter_callback(tfb_font_info *fi, void *user_arg)
+extern (C) bool font_iter_callback(tfb_font_info *fi, void *user_arg)
 {
    printf("    font '%s', psf%u, %u x %u\n",
-          fi->name, fi->psf_version, fi->width, fi->height);
+          fi.name, fi.psf_version, fi.width, fi.height);
    return true;
 }
 
-bool font_iter_cb_select_font16(tfb_font_info *fi, void *user_arg)
+extern (C) bool font_iter_cb_select_font16(tfb_font_info *fi, void *user_arg)
 {
-   if (fi->height == 16) {
+   if (fi.height == 16) {
 
-      int rc = tfb_set_current_font(fi->font_id);
+      int rc = tfb_set_current_font(fi.font_id);
 
       if (rc != TFB_SUCCESS) {
          fprintf(stderr, "tfb_set_current_font() failed with error: %d\n", rc);
          abort();
       }
 
-      printf("Selected font '%s'\n", fi->name);
+      printf("Selected font '%s'\n", fi.name);
       return false; /* stop iterating over fonts */
    }
 
    return true;
 }
 
-int main(int argc, char **argv)
+extern (C) int main(int argc, const char** argv)
 {
    int rc;
 
    printf("Available fonts:\n");
-   tfb_iterate_over_fonts(font_iter_callback, NULL);
+   tfb_iterate_over_fonts(&font_iter_callback, null);
 
    /*
     * Set a font after searching for the best fit with a custom callback.
     * If the criteria is just the size as in this case, the more convenient
     * utility function tfb_set_font_by_size() can be used.
     */
-   tfb_iterate_over_fonts(font_iter_cb_select_font16, NULL);
+   tfb_iterate_over_fonts(&font_iter_cb_select_font16, null);
 
    if (argc == 2) {
 
@@ -66,7 +66,7 @@ int main(int argc, char **argv)
       }
    }
 
-   rc = tfb_acquire_fb(0, NULL, NULL);
+   rc = tfb_acquire_fb(0, null, null);
 
    if (rc != TFB_SUCCESS) {
       fprintf(stderr, "tfb_acquire_fb() failed with error code: %d\n", rc);

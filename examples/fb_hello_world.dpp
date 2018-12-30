@@ -4,11 +4,11 @@
 #include <tfblib/tfblib.h>
 #include <tfblib/tfb_colors.h>
 
-int main(int argc, char **argv)
+int main()
 {
    int rc;
 
-   if ((rc = tfb_acquire_fb(0, NULL, NULL)) != TFB_SUCCESS) {
+   if ((rc = tfb_acquire_fb(0, null, null)) != TFB_SUCCESS) {
       fprintf(stderr, "tfb_acquire_fb() failed with error code: %d\n", rc);
       return 1;
    }

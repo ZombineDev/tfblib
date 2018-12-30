@@ -1,48 +1,51 @@
 /* SPDX-License-Identifier: BSD-2-Clause */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <ctype.h>
-#include <time.h>
-#include <unistd.h>
-#include <math.h>
-#include <errno.h>
+import core.stdc.stdio;
+import core.stdc.stdio;
+import core.stdc.stdlib;
+import core.stdc.ctype;
+import core.stdc.time;
+import core.sys.posix.unistd;
+import core.stdc.math;
+import core.stdc.errno;
+
+import std.algorithm : MIN = min, MAX = max;
 
 #include <tfblib/tfblib.h>
 #include <tfblib/tfb_kb.h>
 #include <tfblib/tfb_colors.h>
 
-#include "utils.h"
+import utils;
 
-#define MAX_ROWS 40
-#define MAX_COLS 40
+enum MAX_ROWS = 40;
+enum MAX_COLS = 40;
 
-static int tw = 2 * 20; /* single tile width */
-static int th = 2 * 20; /* single tile height */
+__gshared int tw = 2 * 20; /* single tile width */
+__gshared int th = 2 * 20; /* single tile height */
 
-static int rows;
-static int cols;
+__gshared int rows;
+__gshared int cols;
 
-static int tetris_row = -1;
-static int off_y = 0; /* temporary offset used for the tetris effect */
+__gshared int tetris_row = -1;
+__gshared int off_y = 0; /* temporary offset used for the tetris effect */
 
-static unsigned char tiles[MAX_ROWS][MAX_COLS];
+__gshared ubyte[MAX_COLS][MAX_ROWS] tiles;
 
-static bool game_over;
-static bool game_paused;
-static int curr_piece;
-static int next_piece = -1;
-static int cp_row;
-static int cp_col;
-static int cp_rot;
-static int game_level = 1;
-static int game_score;
-static int cleared_rows;
-static double fp_cp_row;
-static double row_dec_speed;
+__gshared bool game_over;
+__gshared bool game_paused;
+__gshared ubyte curr_piece;
+__gshared byte next_piece = -1;
+__gshared int cp_row;
+__gshared int cp_col;
+__gshared int cp_rot;
+__gshared int game_level = 1;
+__gshared int game_score;
+__gshared int cleared_rows;
+__gshared double fp_cp_row;
+__gshared double row_dec_speed;
 
-static u32 *piece_colors[] =
-{
+static const piece_colors =
+[
    &tfb_cyan,
    &tfb_blue,
    &tfb_orange,
@@ -50,21 +53,21 @@ static u32 *piece_colors[] =
    &tfb_green,
    &tfb_purple,
    &tfb_red
-};
+];
 
-static inline void draw_tile_xy(int x, int y, u32 color)
+void draw_tile_xy(int x, int y, uint color)
 {
    if (x >= 0 && y >= 0)
       tfb_fill_rect(x + 1, y + 1, tw - 2, th - 2, color);
 }
 
-static inline void draw_tile(int r, int c, u32 color)
+void draw_tile(int r, int c, uint color)
 {
    int off = (tetris_row >= 0 && r > tetris_row) ? off_y : 0;
    draw_tile_xy(c * tw, (rows - r - 1) * th + off, color);
 }
 
-static void draw_piece(int piece, int row, int col, u32 rotation)
+void draw_piece(int piece, int row, int col, uint rotation)
 {
    for (int r = 0; r < 4; r++)
       for (int c = 0; c < 4; c++)
@@ -72,7 +75,7 @@ static void draw_piece(int piece, int row, int col, u32 rotation)
             draw_tile(row + 4 - r - 1, col + c, *piece_colors[piece]);
 }
 
-static void draw_piece_xy(int piece, int x, int y, u32 rotation)
+void draw_piece_xy(int piece, int x, int y, uint rotation)
 {
    for (int r = 0; r < 4; r++)
       for (int c = 0; c < 4; c++)
@@ -83,19 +86,19 @@ static void draw_piece_xy(int piece, int x, int y, u32 rotation)
 }
 
 
-static void redraw_scene(void)
+void redraw_scene()
 {
    static bool title_and_labels_drawn;
-   static int saved_next_piece = -1;
+   static byte saved_next_piece = -1;
    static int saved_level = -1;
    static int saved_score = -1;
 
-   u32 w = tfb_win_width();
-   u32 h = tfb_win_height();
-   u32 center_w1 = tw * cols / 2;
-   u32 center_w2 = tw * cols + (w - tw * cols) / 2;
+   uint w = tfb_win_width();
+   uint h = tfb_win_height();
+   uint center_w1 = tw * cols / 2;
+   uint center_w2 = tw * cols + (w - tw * cols) / 2;
    int xoff = 0, yoff = 0, cy;
-   char buf[64];
+   char[64] buf;
 
    bool full_flush = false;
 
@@ -171,9 +174,9 @@ static void redraw_scene(void)
    cy += tfb_get_curr_font_height() * 4;
 
    if (game_level != saved_level) {
-      sprintf(buf, "%02d", game_level);
+      sprintf(buf.ptr, "%02d", game_level);
       tfb_draw_xcenter_string_scaled(center_w2, cy,
-                                     tfb_cyan, tfb_black, 3, 3, buf);
+                                     tfb_cyan, tfb_black, 3, 3, buf.ptr);
       saved_level = game_level;
       full_flush = true;
    }
@@ -188,9 +191,9 @@ static void redraw_scene(void)
    cy += tfb_get_curr_font_height() * 5;
 
    if (game_score != saved_score) {
-      sprintf(buf, "%06d", game_score);
+      sprintf(buf.ptr, "%06d", game_score);
       tfb_draw_xcenter_string_scaled(center_w2, cy,
-                                     tfb_magenta, tfb_black, 2, 2, buf);
+                                     tfb_magenta, tfb_black, 2, 2, buf.ptr);
       saved_score = game_score;
       full_flush = true;
    }
@@ -218,7 +221,7 @@ static void redraw_scene(void)
    title_and_labels_drawn = true;
 }
 
-static bool will_cp_collide(int new_row, int new_col, int rot)
+bool will_cp_collide(int new_row, int new_col, int rot)
 {
    for (int r = 0; r < 4; r++)
       for (int c = 0; c < 4; c++)
@@ -237,7 +240,7 @@ static bool will_cp_collide(int new_row, int new_col, int rot)
    return false;
 }
 
-static bool is_row_full(int row)
+bool is_row_full(int row)
 {
    for (int c = 0; c < cols; c++)
       if (!tiles[row][c])
@@ -246,7 +249,7 @@ static bool is_row_full(int row)
    return true;
 }
 
-static void do_tetris(int full_row)
+void do_tetris(int full_row)
 {
    for (int c = 0; c < cols; c++)
       tiles[full_row][c] = 0;
@@ -265,12 +268,13 @@ static void do_tetris(int full_row)
          tiles[r - 1][c] = tiles[r][c];
 }
 
-static void consolidate_curr_piece(void)
+void consolidate_curr_piece()
 {
    for (int r = 0; r < 4; r++)
       for (int c = 0; c < 4; c++)
          if (is_tile_set(curr_piece, r, c, cp_rot))
-            tiles[cp_row + 4 - r - 1][cp_col + c] = curr_piece + 1;
+            tiles[cp_row + 4 - r - 1][cp_col + c] =
+	    	cast(ubyte)(curr_piece + 1);
 
    int multiplier = 1;
 
@@ -287,12 +291,12 @@ static void consolidate_curr_piece(void)
    }
 }
 
-static inline int get_random_piece(void)
+ubyte get_random_piece()
 {
-   return rand() % 7;
+   return (rand() % 7) & 7;
 }
 
-static void setup_new_piece(void)
+void setup_new_piece()
 {
    if (next_piece < 0)
       next_piece = get_random_piece();
@@ -309,9 +313,9 @@ static void setup_new_piece(void)
       game_over = true;
 }
 
-static void move_curr_piece_down(double dec)
+void move_curr_piece_down(double dec)
 {
-   int p_row = fp_cp_row - dec;
+   int p_row = cast(int)(fp_cp_row - dec);
 
    if (will_cp_collide(p_row, cp_col, cp_rot)) {
 
@@ -323,7 +327,7 @@ static void move_curr_piece_down(double dec)
    }
 }
 
-static bool handle_piece_move_rot(uint64_t k)
+bool handle_piece_move_rot(uint64_t k)
 {
    if (k == TFB_KEY_UP) {
 
@@ -353,7 +357,7 @@ static bool handle_piece_move_rot(uint64_t k)
    return true;
 }
 
-static int game_loop(void)
+int game_loop()
 {
    uint32_t w = 2 * 480;
    uint32_t h = 2 * 480;
@@ -396,9 +400,9 @@ static int game_loop(void)
             move_curr_piece_down(row_dec_speed);
       }
 
-      if (k || ((int)fp_cp_row != cp_row) || game_over_state != game_over) {
+      if (k || (cast(int)fp_cp_row != cp_row) || game_over_state != game_over) {
 
-         cp_row = fp_cp_row;
+         cp_row = cast(int)fp_cp_row;
          redraw_scene();
 
          if (game_over)
@@ -415,17 +419,17 @@ static int game_loop(void)
    return 0;
 }
 
-int main(int argc, char **argv)
+extern (C) int main(int argc, const char** argv)
 {
    int rc, saved_errno = 0;
-   srand(time(NULL));
+   srand(cast(uint)time(null));
 
    if (tfb_set_font_by_size(16, TFB_FONT_ANY_HEIGHT) != TFB_SUCCESS) {
       fprintf(stderr, "Unable to select a font with width = 16\n");
       return 1;
    }
 
-   rc = tfb_acquire_fb(TFB_FL_USE_DOUBLE_BUFFER, NULL, NULL);
+   rc = tfb_acquire_fb(TFB_FL_USE_DOUBLE_BUFFER, null, null);
 
    if (rc != TFB_SUCCESS) {
       fprintf(stderr, "tfb_acquire_fb() failed with error code: %d\n", rc);

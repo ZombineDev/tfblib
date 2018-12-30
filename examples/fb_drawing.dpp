@@ -1,18 +1,18 @@
 /* SPDX-License-Identifier: BSD-2-Clause */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <math.h>
+import core.stdc.math : sin, cos;
+import core.stdc.stdio : getchar, fprintf, stderr;
+import std.math : PI;
 
 #include <tfblib/tfblib.h>
 #include <tfblib/tfb_colors.h>
 
-static inline double rad_to_deg(double rad)
+double rad_to_deg(double rad)
 {
-   return (rad / (2 * M_PI)) * 360.0;
+   return (rad / (2 * PI)) * 360.0;
 }
 
-void draw_something(void)
+void draw_something()
 {
    tfb_set_font_by_size(8, 16);
 
@@ -29,15 +29,15 @@ void draw_something(void)
    uint32_t cx = w/2;
    uint32_t cy = h/2;
 
-   const double full_circle = 2.0 * M_PI;
+   const double full_circle = 2.0 * PI;
    const double delta_ang = full_circle / 120.0;
 
    for (double ang = 0.0; ang < full_circle; ang += delta_ang) {
 
-      uint32_t px = cx + cos(ang) * l;
-      uint32_t py = cy + sin(ang) * l;
+      uint32_t px = cast(uint)(cx + cos(ang) * l);
+      uint32_t py = cast(uint)(cy + sin(ang) * l);
       uint32_t color =
-         tfb_make_color_hsv(TFB_HUE_DEGREE * rad_to_deg(ang),
+         tfb_make_color_hsv(cast(uint)(TFB_HUE_DEGREE * rad_to_deg(ang)),
                             255,
                             255);
 
@@ -46,10 +46,10 @@ void draw_something(void)
    }
 }
 
-int main(int argc, char **argv)
+extern (C) int main(int argc, const char** argv)
 {
    int rc;
-   rc = tfb_acquire_fb(0, NULL, NULL);
+   rc = tfb_acquire_fb(0, null, null);
 
    if (rc != TFB_SUCCESS) {
       fprintf(stderr, "tfb_acquire_fb() failed with error code: %d\n", rc);

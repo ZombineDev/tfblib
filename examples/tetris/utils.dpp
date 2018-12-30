@@ -1,0 +1,101 @@
+/* SPDX-License-Identifier: BSD-2-Clause */
+
+#include <tfblib/tfblib.h>
+#include <tfblib/tfb_kb.h>
+
+/* Generic utils */
+double int_pow(double b, int p)
+{
+   double ret = 1.0;
+
+   for (int i = 0; i < p; i++)
+      ret *= b;
+
+   return ret;
+}
+
+/* Game-related stuff */
+static immutable bool[4][4] piece_i =
+[
+   [0, 1, 0, 0],
+   [0, 1, 0, 0],
+   [0, 1, 0, 0],
+   [0, 1, 0, 0]
+];
+
+static immutable bool[4][4] piece_j =
+[
+   [0, 0, 0, 0],
+   [0, 0, 1, 0],
+   [0, 0, 1, 0],
+   [0, 1, 1, 0]
+];
+
+static immutable bool[4][4] piece_l =
+[
+   [0, 0, 0, 0],
+   [0, 1, 0, 0],
+   [0, 1, 0, 0],
+   [0, 1, 1, 0]
+];
+
+static immutable bool[4][4] piece_o =
+[
+   [0, 0, 0, 0],
+   [0, 1, 1, 0],
+   [0, 1, 1, 0],
+   [0, 0, 0, 0]
+];
+
+static immutable bool[4][4] piece_s =
+[
+   [0, 0, 0, 0],
+   [0, 0, 1, 1],
+   [0, 1, 1, 0],
+   [0, 0, 0, 0]
+];
+
+static immutable bool[4][4] piece_t =
+[
+   [0, 0, 0, 0],
+   [0, 1, 0, 0],
+   [1, 1, 1, 0],
+   [0, 0, 0, 0],
+];
+
+static immutable bool[4][4] piece_z =
+[
+   [0, 0, 0, 0],
+   [0, 1, 1, 0],
+   [0, 0, 1, 1],
+   [0, 0, 0, 0]
+];
+
+static immutable pieces =
+[
+   &piece_i,
+   &piece_j,
+   &piece_l,
+   &piece_o,
+   &piece_s,
+   &piece_t,
+   &piece_z,
+];
+
+bool is_tile_set(uint p, int r, int c, uint rotation)
+{
+   final switch (rotation % 4) {
+
+      case 0:
+         return (*pieces[p])[r][c];
+
+      case 1:
+         return (*pieces[p])[4-c-1][r];
+
+      case 2:
+         return (*pieces[p])[4-r-1][4-c-1];
+
+      case 3:
+         return (*pieces[p])[c][4-r-1];
+   }
+}
